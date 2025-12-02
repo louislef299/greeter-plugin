@@ -5,5 +5,9 @@ proto: clean
     --go-grpc_out={{API_DIR}} --go-grpc_opt=paths=source_relative \
      {{API_DIR}}/greeter.proto
 
+run NAME: proto
+    go build -o greet ./plugins
+    go run main.go {{NAME}}
+
 clean:
-    rm api/*go || true
+    rm api/*go greet || true

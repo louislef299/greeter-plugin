@@ -45,12 +45,12 @@ func (p *GreetPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker,
 }
 
 // GRPCClient is an implementation of Greet that talks over RPC.
-type GRPCClient struct{ client api.GreeterClient }
+type GRPCClient struct {
+	client api.GreeterClient
+}
 
-func (c *GRPCClient) Greet(ctx context.Context, p *api.Person) (*api.Greeting, error) {
-	return &api.Greeting{
-		Message: fmt.Sprintf("hello server %s!", p.Name),
-	}, nil
+func (c *GRPCClient) Greet(name string) string {
+	return fmt.Sprintf("hello, %s!", name)
 }
 
 // Here is the gRPC server that GRPCClient talks to.
@@ -62,6 +62,6 @@ type GRPCServer struct {
 
 func (s *GRPCServer) Greet(ctx context.Context, p *api.Person) (*api.Greeting, error) {
 	return &api.Greeting{
-		Message: fmt.Sprintf("hello client %s!", p.Name),
+		Message: s.Impl.Greet(p.Name),
 	}, nil
 }

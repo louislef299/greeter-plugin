@@ -13,11 +13,10 @@ import (
 func main() {
 	// We're a host. Start by launching the plugin process.
 	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig: shared.Handshake,
-		Plugins:         shared.PluginMap,
-		Cmd:             exec.Command("sh", "-c", os.Getenv("KV_PLUGIN")),
-		AllowedProtocols: []plugin.Protocol{
-			plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
+		HandshakeConfig:  shared.Handshake,
+		Plugins:          shared.PluginMap,
+		Cmd:              exec.Command("sh", "-c", "./greet"),
+		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 	})
 	defer client.Kill()
 
@@ -26,6 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("rpcClient type: %T\n", rpcClient)
 
 	// Request the plugin
 	raw, err := rpcClient.Dispense("greet")
@@ -37,5 +37,5 @@ func main() {
 	// implementation but is in fact over an RPC connection.
 	g := raw.(shared.Greet)
 	os.Args = os.Args[1:]
-	fmt.Println(g.Greet(os.Args[1]))
+	fmt.Println(g.Greet(os.Args[0]))
 }
