@@ -24,7 +24,7 @@ var PluginMap = map[string]plugin.Plugin{
 
 // Greet is the interface that we're exposing as a plugin
 type Greet interface {
-	Greet(input string) string
+	Greet(name string) string
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.
