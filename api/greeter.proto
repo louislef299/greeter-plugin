@@ -1,16 +1,16 @@
 syntax = "proto3";
 package tutorial;
 
-import "google/protobuf/timestamp.proto";
 option go_package = "github.com/louislef299/greeter-plugin/api";
 
-service Simple {
-    rpc Greet(Greeting) returns (Greeting);
+service Greeter {
+    rpc Greet(Person) returns (Greeting);
+}
+
+message Person {
+  string name = 1;
 }
 
 message Greeting {
   string message = 1;
-  string name = 2;
-  int32 id = 3;
-  google.protobuf.Timestamp last_updated = 4;
 }
