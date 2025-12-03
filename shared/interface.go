@@ -2,7 +2,6 @@ package shared
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/go-plugin"
 	"github.com/louislef299/greeter-plugin/api"
@@ -23,7 +22,7 @@ var PluginMap = map[string]plugin.Plugin{
 }
 
 // Greet is the interface that we're exposing as a plugin
-type Greet interface {
+type Greeter interface {
 	Greet(name string) string
 }
 
@@ -32,15 +31,21 @@ type GreetPlugin struct {
 	plugin.Plugin
 	// Concrete implementation, written in Go. This is only used for plugins
 	// that are written in Go.
-	Impl Greet
+	Impl Greeter
 }
 
-func (p *GreetPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
+// GRPCServer registers the Greeter service with the plugin's gRPC server.
+// Called in the plugin process to expose the implementation over RPC.
+func (p *GreetPlugin) GRPCServer(broker *plugin.GRPCBroker,
+	s *grpc.Server) error {
 	api.RegisterGreeterServer(s, &GRPCServer{Impl: p.Impl})
 	return nil
 }
 
-func (p *GreetPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+// GRPCClient creates a client that calls the plugin's Greeter service over gRPC.
+// Called in the host process to create a Go interface backed by RPC calls.
+func (p *GreetPlugin) GRPCClient(ctx context.Context,
+	broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	return &GRPCClient{client: api.NewGreeterClient(c)}, nil
 }
 
@@ -50,17 +55,25 @@ type GRPCClient struct {
 }
 
 func (c *GRPCClient) Greet(name string) string {
-	return fmt.Sprintf("hello, %s!", name)
+	g, err := c.client.Greet(context.Background(), &api.Person{
+		Name: name,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return g.Message
 }
 
 // Here is the gRPC server that GRPCClient talks to.
 type GRPCServer struct {
 	api.UnimplementedGreeterServer
-	// This is the real implementation
-	Impl Greet
+	// This is the real interface implementation
+	Impl Greeter
 }
 
-func (s *GRPCServer) Greet(ctx context.Context, p *api.Person) (*api.Greeting, error) {
+// Looks more like the actual gRPC signature
+func (s *GRPCServer) Greet(ctx context.Context,
+	p *api.Person) (*api.Greeting, error) {
 	return &api.Greeting{
 		Message: s.Impl.Greet(p.Name),
 	}, nil

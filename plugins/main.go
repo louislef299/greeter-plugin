@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/go-plugin"
 	"github.com/louislef299/greeter-plugin/shared"
@@ -10,6 +11,8 @@ import (
 type Greet struct{}
 
 func (Greet) Greet(name string) string {
+	// This proves the plugin process is doing the work
+	os.WriteFile("./greet-plugin-called", []byte(name), 0644)
 	return fmt.Sprintf("hello %s", name)
 }
 

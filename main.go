@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -20,12 +19,19 @@ func main() {
 	})
 	defer client.Kill()
 
-	// Connect via RPC
+	// Connect via gRPC
 	rpcClient, err := client.Client()
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("rpcClient type: %T\n", rpcClient)
+
+	// Ping the client
+	err = rpcClient.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("successfully pinged the rpcClient")
 
 	// Request the plugin
 	raw, err := rpcClient.Dispense("greet")
@@ -35,7 +41,7 @@ func main() {
 
 	// We should have a Greeter now! This feels like a normal interface
 	// implementation but is in fact over an RPC connection.
-	g := raw.(shared.Greet)
+	g := raw.(shared.Greeter)
 	os.Args = os.Args[1:]
-	fmt.Println(g.Greet(os.Args[0]))
+	log.Println("response from plugin:", g.Greet(os.Args[0]))
 }
